@@ -1,5 +1,7 @@
 import os
 import subprocess
+from google.genai import types
+
 
 def run_python_file(working_directory, file_path, args=[]):
     try:
@@ -11,23 +13,21 @@ def run_python_file(working_directory, file_path, args=[]):
             os.path.abspath(working_directory)
         ):
             return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
-        
+
         if not os.path.isfile(relative_file):
             return f'Error: File "{file_path}" not found.'
-        
-        if extension != '.py':
+
+        if extension != ".py":
             return f'Error: "{file_path}" is not a Python file.'
 
-
-
         result = subprocess.run(
-            args=['python3',relative_file,*args],
+            args=["python3", relative_file, *args],
             timeout=30,
             capture_output=True,
             text=True,
-            )
-            # cwd=abs_working_dir
-        
+        )
+        # cwd=abs_working_dir
+
         output = []
         if result.stdout:
             output.append(f"STDOUT:\n{result.stdout}")
@@ -39,10 +39,26 @@ def run_python_file(working_directory, file_path, args=[]):
 
         return "\n".join(output) if output else "No output produced."
 
-        
         # print(koko.stderr)
-
 
     except Exception as e:
         return f"Error: {e}"
-    
+
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Runs a python file, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The python file to run, relative to the working directory.",
+            ),
+            # "args": types.Schema(
+            #     type=types.Type.ARRAY,
+            #     description="Optional list of arguments to be passed to the python command.",
+            # ),
+        },
+    ),
+)
