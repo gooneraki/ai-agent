@@ -1,5 +1,6 @@
 from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
+from functions.write_file import write_file
 
 run_cases_info = [
     (
@@ -120,6 +121,21 @@ if __name__ == "__main__":
     ),
 ]
 
+run_cases_write = [
+    (
+        ["calculator", "lorem.txt", "wait, this isn't lorem ipsum"],
+        f'Successfully wrote to "lorem.txt" (28 characters written)'
+    ),
+    (
+        ["calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet"],
+        f'Successfully wrote to "pkg/morelorem.txt" (26 characters written)'
+    ),
+    (
+        ["calculator", "/tmp/temp.txt", "this should not be allowed"],
+        'Error: Cannot write to "/tmp/temp.txt" as it is outside the permitted working directory'
+    )
+]
+
 
 
 def test_info(input1, expected_output):
@@ -137,6 +153,7 @@ def test_info(input1, expected_output):
 
 
 def test_content(input, expected_output):
+
     print(f"/n===============")
     print(f"input {input}")
     print(f"EXPECTED\n{expected_output}")
@@ -149,12 +166,25 @@ def test_content(input, expected_output):
         print("SUCCESS TEST")
     return result == expected_output
 
+def test_write(input, expected_output):
+    print(f"/n===============")
+    print(f"input {input}")
+    print(f"EXPECTED\n{expected_output}")
+
+    result = write_file(*input)
+    print(f"ACTUAL\n{result}")
+    if (result != expected_output):
+        print("FAILED TEST")
+    else:
+        print("SUCCESS TEST")
+    return result == expected_output
+
 def main():
     passed = 0
     failed = 0
 
-    for case in run_cases_content:
-        success = test_content(case[0],case[1])
+    for case in run_cases_write:
+        success = test_write(case[0],case[1])
         if success:
             passed += 1
         else:
