@@ -1,27 +1,33 @@
 import os
 import subprocess
 
-
-def run_python_file(working_directory, file_path, args=None):
-    abs_working_dir = os.path.abspath(working_directory)
-    abs_file_path = os.path.abspath(os.path.join(working_directory, file_path))
-    if not abs_file_path.startswith(abs_working_dir):
-        return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
-    if not os.path.exists(abs_file_path):
-        return f'Error: File "{file_path}" not found.'
-    if not file_path.endswith(".py"):
-        return f'Error: "{file_path}" is not a Python file.'
+def run_python_file(working_directory, file_path, args=[]):
     try:
-        commands = ["python", abs_file_path]
-        if args:
-            commands.extend(args)
+        # abs_working_dir = os.path.abspath(working_directory)
+        name, extension = os.path.splitext(file_path)
+        relative_file = os.path.join(working_directory, file_path)
+
+        if not os.path.abspath(relative_file).startswith(
+            os.path.abspath(working_directory)
+        ):
+            return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
+        
+        if not os.path.isfile(relative_file):
+            return f'Error: File "{file_path}" not found.'
+        
+        if extension != '.py':
+            return f'Error: "{file_path}" is not a Python file.'
+
+
+
         result = subprocess.run(
-            commands,
+            args=['python3',relative_file,*args],
+            timeout=30,
             capture_output=True,
             text=True,
-            timeout=30,
-            cwd=abs_working_dir,
-        )
+            )
+            # cwd=abs_working_dir
+        
         output = []
         if result.stdout:
             output.append(f"STDOUT:\n{result.stdout}")
@@ -32,56 +38,11 @@ def run_python_file(working_directory, file_path, args=None):
             output.append(f"Process exited with code {result.returncode}")
 
         return "\n".join(output) if output else "No output produced."
+
+        
+        # print(koko.stderr)
+
+
     except Exception as e:
-        return f"Error: executing Python file: {e}"
-
-
-# ME VERSION  - Something wrong
-# import os
-# import subprocess
-
-# def run_python_file(working_directory, file_path, args=[]):
-#     try:
-#         # abs_working_dir = os.path.abspath(working_directory)
-#         name, extension = os.path.splitext(file_path)
-#         relative_file = os.path.join(working_directory, file_path)
-
-#         if not os.path.abspath(relative_file).startswith(
-#             os.path.abspath(working_directory)
-#         ):
-#             return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
-        
-#         if not os.path.isfile(relative_file):
-#             return f'Error: File "{name}" not found.'
-        
-#         if extension != '.py':
-#             return f'Error: "{name}" is not a Python file.'
-
-
-
-#         result = subprocess.run(
-#             args=['python3',relative_file,*args],
-#             timeout=30,
-#             capture_output=True,
-#             text=True,
-#             )
-#             # cwd=abs_working_dir
-        
-#         output = []
-#         if result.stdout:
-#             output.append(f"STDOUT:\n{result.stdout}")
-#         if result.stderr:
-#             output.append(f"STDERR:\n{result.stderr}")
-
-#         if result.returncode != 0:
-#             output.append(f"Process exited with code {result.returncode}")
-
-#         return "\n".join(output) if output else "No output produced."
-
-        
-#         # print(koko.stderr)
-
-
-#     except Exception as e:
-#         return f"Error: {e}"
+        return f"Error: {e}"
     

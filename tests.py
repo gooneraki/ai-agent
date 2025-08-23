@@ -168,7 +168,7 @@ OK\n"""
     ),
     (
         ["calculator", "nonexistent.py"],
-        'Error: File "nonexistent" not found.',
+        'Error: File "nonexistent.py" not found.',
     ),
 ]
 
