@@ -1,24 +1,25 @@
 from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
 from functions.write_file import write_file
+from functions.run_python_file import run_python_file
 
 run_cases_info = [
     (
         ["calculator", "."],
-        """- main.py: file_size=576 bytes, is_dir=False\n- tests.py: file_size=1343 bytes, is_dir=False\n- pkg: file_size=92 bytes, is_dir=True"""
+        """- main.py: file_size=576 bytes, is_dir=False\n- tests.py: file_size=1343 bytes, is_dir=False\n- pkg: file_size=92 bytes, is_dir=True""",
     ),
     (
         ["calculator", "pkg"],
-        """- calculator.py: file_size=1739 bytes, is_dir=False\n- render.py: file_size=768 bytes, is_dir=False"""
+        """- calculator.py: file_size=1739 bytes, is_dir=False\n- render.py: file_size=768 bytes, is_dir=False""",
     ),
     (
         ["calculator", "/bin"],
-        """Error: Cannot list "/bin" as it is outside the permitted working directory"""
+        """Error: Cannot list "/bin" as it is outside the permitted working directory""",
     ),
     (
         ["calculator", "../"],
-        """Error: Cannot list "../" as it is outside the permitted working directory"""
-    )
+        """Error: Cannot list "../" as it is outside the permitted working directory""",
+    ),
 ]
 
 run_cases_content = [
@@ -47,7 +48,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()"""
+    main()""",
     ),
     (
         ["calculator", "pkg/calculator.py"],
@@ -109,33 +110,67 @@ if __name__ == "__main__":
 
         b = values.pop()
         a = values.pop()
-        values.append(self.operators[operator](a, b))"""
+        values.append(self.operators[operator](a, b))""",
     ),
     (
         ["calculator", "/bin/cat"],
-        'Error: Cannot read "/bin/cat" as it is outside the permitted working directory'
+        'Error: Cannot read "/bin/cat" as it is outside the permitted working directory',
     ),
     (
         ["calculator", "pkg/does_not_exist.py"],
-        'Error: File not found or is not a regular file: "pkg/does_not_exist.py"'
+        'Error: File not found or is not a regular file: "pkg/does_not_exist.py"',
     ),
 ]
 
 run_cases_write = [
     (
         ["calculator", "lorem.txt", "wait, this isn't lorem ipsum"],
-        f'Successfully wrote to "lorem.txt" (28 characters written)'
+        f'Successfully wrote to "lorem.txt" (28 characters written)',
     ),
     (
         ["calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet"],
-        f'Successfully wrote to "pkg/morelorem.txt" (26 characters written)'
+        f'Successfully wrote to "pkg/morelorem.txt" (26 characters written)',
     ),
     (
         ["calculator", "/tmp/temp.txt", "this should not be allowed"],
-        'Error: Cannot write to "/tmp/temp.txt" as it is outside the permitted working directory'
-    )
+        'Error: Cannot write to "/tmp/temp.txt" as it is outside the permitted working directory',
+    ),
 ]
 
+run_cases_python = [
+    (
+        ["calculator", "main.py"],
+        """STDOUT:\nCalculator App\nUsage: python main.py "<expression>"\nExample: python main.py "3 + 5\"\n"""
+    ),
+    (
+        ["calculator", "main.py", ["3 + 5"]],
+        """STDOUT:
+┌─────────┐
+│  3 + 5  │
+│         │
+│  =      │
+│         │
+│  8      │
+└─────────┘\n"""
+    ),
+    (
+        ["calculator", "tests.py"],
+        """STDERR:
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.001s
+
+OK\n"""
+    ),
+    (
+        ["calculator", "../main.py"],
+        'Error: Cannot execute "../main.py" as it is outside the permitted working directory'
+    ),
+    (
+        ["calculator", "nonexistent.py"],
+        'Error: File "nonexistent" not found.',
+    ),
+]
 
 
 def test_info(input1, expected_output):
@@ -145,7 +180,7 @@ def test_info(input1, expected_output):
 
     result = get_files_info(*input1)
     print(f"ACTUAL\n{result}")
-    if (result != expected_output):
+    if result != expected_output:
         print("FAILED TEST")
     else:
         print("SUCCESS TEST")
@@ -160,11 +195,12 @@ def test_content(input, expected_output):
 
     result = get_file_content(*input)
     print(f"ACTUAL\n{result}")
-    if (result != expected_output):
+    if result != expected_output:
         print("FAILED TEST")
     else:
         print("SUCCESS TEST")
     return result == expected_output
+
 
 def test_write(input, expected_output):
     print(f"/n===============")
@@ -173,34 +209,45 @@ def test_write(input, expected_output):
 
     result = write_file(*input)
     print(f"ACTUAL\n{result}")
-    if (result != expected_output):
+    if result != expected_output:
         print("FAILED TEST")
     else:
         print("SUCCESS TEST")
     return result == expected_output
 
+
+def test_run_python(input, expected_output):
+    print(f"\n===============")
+    print(f"input {input}")
+    print(f"\nEXPECTED\n{expected_output}")
+
+    result = run_python_file(*input)
+    print(f"\nACTUAL\n{result}\n")
+    if result != expected_output:
+        print("FAILED TEST")
+    else:
+        print("SUCCESS TEST")
+    return result == expected_output
+
+
 def main():
     passed = 0
     failed = 0
 
-    for case in run_cases_write:
-        success = test_write(case[0],case[1])
+    
+
+    for case in run_cases_python:
+        success = test_run_python(case[0], case[1])
         if success:
             passed += 1
         else:
             failed += 1
-
-    
-    
-    
-
-
 
     if failed == 0:
         print("\n============= PASS ==============")
     else:
         print("\n============= FAIL ==============")
         print(f"{passed} passed, {failed} failed")
-    
+
 
 main()
