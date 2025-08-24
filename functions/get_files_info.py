@@ -26,7 +26,7 @@ def get_files_info(working_directory, directory="."):
         return files_ext
     except Exception as e:
         return f"Error: {e}"
-    
+
 
 schema_get_files_info = types.FunctionDeclaration(
     name="get_files_info",
