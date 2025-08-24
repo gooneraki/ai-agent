@@ -54,30 +54,66 @@ All paths you provide should be relative to the working directory. You do not ne
     api_key = os.environ.get("GEMINI_API_KEY")
 
     client = Client(api_key=api_key)
-    response = client.models.generate_content(
-        model=model_name,
-        contents=messages,
-        config=config,
-    )
 
-    function_calls = response.function_calls
-    if function_calls:
-        for function_call_part in function_calls:
+    for _ in range(20):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=messages,
+                config=config,
+            )
 
-            function_call_result = call_function(function_call_part, is_verbose)
+            candidates = response.candidates
+            if candidates:
+                for candidate in candidates:
+                    messages.append(candidate.content)
 
-            if not function_call_result.parts[0].function_response.response:
-                raise Exception("Fatal exception of some sort")
+            function_calls = response.function_calls
+            if function_calls:
+                for function_call_part in function_calls:
+
+                    function_call_result = call_function(function_call_part, is_verbose)
+
+                    if not function_call_result.parts[0].function_response.response:
+                        raise Exception("Fatal exception of some sort")
+
+                    new_message = types.Content(
+                        role="user",
+                        parts=[
+                            types.Part(
+                                text=function_call_result.parts[
+                                    0
+                                ].function_response.response["result"]
+                            )
+                        ],
+                        # parts=[
+                        #     types.Part.from_function_response(
+                        #         name="call_function",
+                        #         text=function_call_result.parts[
+                        #             0
+                        #         ].function_response.response,
+                        #     )
+                        # ],
+                    )
+
+                    messages.append(new_message)
+
+                    if is_verbose:
+                        print(
+                            f"-> {function_call_result.parts[0].function_response.response}"
+                        )
+
+            else:
+                print(response.text)
+                break
 
             if is_verbose:
-                print(f"-> {function_call_result.parts[0].function_response.response}")
-
-    else:
-        print(response.text)
-
-    if is_verbose:
-        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+                print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+                print(
+                    f"Response tokens: {response.usage_metadata.candidates_token_count}"
+                )
+        except Exception as e:
+            print(f"Error: {e}")
 
 
 if __name__ == "__main__":
