@@ -19,15 +19,12 @@ def main():
             args.append(arg)
 
     if not args:
-        print("AI Code Assistant")
-        print('\nUsage: python main.py "your prompt here" [--verbose]')
-        print('Example: python main.py "How do I fix the calculator?"')
-        sys.exit(1)
+        user_prompt = "Why is Boot.dev such a great place to learn backend development? Use one paragraph maximum."
+    else:
+        user_prompt = " ".join(args)
 
     api_key = os.environ.get("GEMINI_API_KEY")
     client = genai.Client(api_key=api_key)
-
-    user_prompt = " ".join(args)
 
     if verbose:
         print(f"User prompt: {user_prompt}\n")
@@ -61,9 +58,11 @@ def generate_content(client, messages, verbose):
             tools=[available_functions], system_instruction=system_prompt
         ),
     )
-    if verbose:
-        print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-        print("Response tokens:", response.usage_metadata.candidates_token_count)
+    if response.usage_metadata is None:
+        raise RuntimeError("API request failed: usage_metadata is None")
+    
+    print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+    print("Response tokens:", response.usage_metadata.candidates_token_count)
 
     if response.candidates:
         for candidate in response.candidates:
